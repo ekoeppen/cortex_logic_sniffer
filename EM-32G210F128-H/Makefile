@@ -1,9 +1,9 @@
 # Declare paths
 LIB_PATH = ../..
-STD_PERIPH = $(LIB_PATH)/STM32F10x_StdPeriph_Lib_V3.5.0
-DRIVER =  $(STD_PERIPH)/Libraries/STM32F10x_StdPeriph_Driver
-CMSIS_CORE = $(STD_PERIPH)/Libraries/CMSIS/CM3/CoreSupport
-CMSIS_DEVICE = $(STD_PERIPH)/Libraries/CMSIS/CM3/DeviceSupport/ST/STM32F10x
+EM_CMSIS_3 = $(LIB_PATH)/EM_CMSIS_3
+DRIVER =  $(EM_CMSIS_3)/emlib
+CMSIS_CORE = $(EM_CMSIS_3)/CMSIS/Include
+CMSIS_DEVICE = $(EM_CMSIS_3)/Device/EnergyMicro/EFM32G
 
 # OpenOCD interface file used for programming/debugging the micronctroller
 OPENOCD_INTERFACE ?= interface/olimex-arm-usb-tiny-h.cfg
@@ -16,25 +16,24 @@ CP = arm-none-eabi-objcopy
 OD = arm-none-eabi-objdump
 
 # Declare command line flags
-CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE) -I$(CMSIS_DEVICE) -I$(DRIVER)/inc -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER
+CORE_CFLAGS = -I./ -I$(CMSIS_CORE) -I$(CMSIS_DEVICE)/Include -I$(DRIVER)/inc -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -DEFM32G210F128
 CFLAGS = $(CORE_CFLAGS) -c 
-CFLAGS_LINK = -Wl,-Tstm32f103.ld -nostartfiles $(CORE_CFLAGS)
+CFLAGS_LINK = -Wl,-T$(CMSIS_DEVICE)/Source/GCC/efm32g.ld -nostartfiles $(CORE_CFLAGS)
 ASFLAGS = -mcpu=cortex-m3 -mthumb -g
-LDFLAGS = -Tstm32f103.ld -nostartfiles
+LDFLAGS = -T$(CMSIS_DEVICE)/Source/GCC/efm32g.ld -nostartfiles
 CPFLAGS = -Obinary
 ODFLAGS	= -S
 
 # List common and system library source files
-# (i.e. for accessing STM32/Cortex M3 hardware) 
-SRCS = $(CMSIS_CORE)/core_cm3.c
-SRCS += $(CMSIS_DEVICE)/system_stm32f10x.c
-SRCS += $(CMSIS_DEVICE)/startup/gcc_ride7/startup_stm32f10x_md.s
-SRCS += $(DRIVER)/src/stm32f10x_rcc.c
-SRCS += $(DRIVER)/src/stm32f10x_gpio.c
-SRCS += $(DRIVER)/src/stm32f10x_usart.c
-SRCS += $(DRIVER)/src/stm32f10x_exti.c
-SRCS += $(DRIVER)/src/misc.c
-SRCS += stm32_p103.c
+SRCS = $(CMSIS_DEVICE)/Source/system_efm32g.c
+SRCS += $(CMSIS_DEVICE)/Source/GCC/startup_efm32g.S
+SRCS += $(DRIVER)/src/em_cmu.c
+SRCS += $(DRIVER)/src/em_gpio.c
+SRCS += $(DRIVER)/src/em_emu.c
+SRCS += $(DRIVER)/src/em_timer.c
+SRCS += $(DRIVER)/src/em_system.c
+SRCS += $(DRIVER)/src/em_usart.c
+SRCS += em_32g210f128_h.c
 SRCS += ../common/main.c ../common/sampler.s
 
 # List path to demo build output files

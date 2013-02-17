@@ -5,6 +5,32 @@
 #include "stm32f10x_usart.h"
 #include "stm32f10x_exti.h"
 #include "misc.h"
+#include "common.h"
+
+extern volatile uint32_t reset_control;
+
+int32_t usart1_rcv_char = -1;
+int32_t usart2_rcv_char = -1;
+
+void EXTI0_IRQHandler(void)
+{
+    if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+        reset_control |= BUTTON_PRESSED;
+        EXTI_ClearITPendingBit(EXTI_Line0);
+    }
+}
+void USART1_IRQHandler(void)
+{
+    usart1_rcv_char = USART_ReceiveData(USART1);
+}
+
+void USART2_IRQHandler(void)
+{
+    usart2_rcv_char = USART_ReceiveData(USART2);
+    if (usart2_rcv_char == 0) {
+        reset_control |= RESET_CMD;
+    }
+}
 
 void init_led(void)
 {
@@ -26,21 +52,7 @@ void init_led(void)
     GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
-void init_button(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-    /* Enable GPIO A clock */
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-
-    /* Configure the button pin as a floating input. */
-    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_0;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
-}
-
-void enable_button_interrupts(void)
+static void enable_button_interrupts(void)
 {
     EXTI_InitTypeDef EXTI_InitStructure;
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -70,7 +82,22 @@ void enable_button_interrupts(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-void init_usart(USART_TypeDef *uart, int speed)
+void init_button(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    /* Enable GPIO A clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+
+    /* Configure the button pin as a floating input. */
+    GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_0;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    enable_button_interrupts();
+}
+
+static void init_usart(USART_TypeDef *uart, int speed)
 {
     USART_InitTypeDef USART_InitStructure;
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -118,7 +145,7 @@ void init_usart(USART_TypeDef *uart, int speed)
     USART_Init(uart, &USART_InitStructure);
 }
 
-void enable_usart_interrupts(USART_TypeDef *uart)
+static void enable_usart_interrupts(USART_TypeDef *uart)
 {
     NVIC_InitTypeDef NVIC_InitStructure;
 
@@ -134,23 +161,104 @@ void enable_usart_interrupts(USART_TypeDef *uart)
     NVIC_Init(&NVIC_InitStructure);
 }
 
-void enable_usart(USART_TypeDef *uart)
+static void enable_usart(USART_TypeDef *uart)
 {
     /* Enable the RS232 port. */
     USART_Cmd(uart, ENABLE);
 }
 
-void init_rs232(void)
+static void send_byte_usart(USART_TypeDef *uart, uint8_t b)
 {
-    init_usart(USART2, 9600);
+    USART_SendData(uart, b);
+    while(USART_GetFlagStatus(uart, USART_FLAG_TXE) == RESET);
 }
 
-void enable_rs232_interrupts(void)
+static uint8_t read_byte_usart(USART_TypeDef *uart)
 {
+    int32_t *c;
+    uint8_t r;
+
+    if (uart == USART1) c = &usart1_rcv_char;
+    else if (uart == USART2) c = &usart2_rcv_char;
+    while (*c == -1) __WFI();
+    r = *c & 0xff;
+    *c = -1;
+    return r;
+}
+
+static void send_string_usart(USART_TypeDef *uart, char *string)
+{
+    while (*string != 0) {
+        send_byte_usart(uart, (uint8_t) *string++);
+    }
+}
+
+static void send_hex_usart(USART_TypeDef *uart, uint32_t n)
+{
+    uint8_t c;
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        c = (n >> 28);
+        send_byte_usart(uart, c + (c > 9 ? 'a' - 10 : '0'));
+        n <<= 4;
+    }
+}
+
+void init_log(void)
+{
+    init_usart(USART1, 115200);
+    enable_usart_interrupts(USART1);
+    enable_usart(USART1);
+}
+
+void log_string(char *str)
+{
+    send_string_usart(USART1, str);
+}
+
+void log_nl()
+{
+    log_string("\r\n");
+}
+
+void log_hex(uint32_t n)
+{
+    send_hex_usart(USART1, n);
+}
+
+void set_led(uint32_t on)
+{
+    if (on) {
+        GPIOC->BRR = 0x00001000;
+    } else {
+        GPIOC->BSRR = 0x00001000;
+    }
+}
+
+void init_uart(void)
+{
+    init_usart(USART2, 115200);
     enable_usart_interrupts(USART2);
+    enable_usart(USART2);
 }
 
-void enable_rs232(void)
+void send_byte(uint8_t byte)
 {
-    enable_usart(USART2);
+    send_byte_usart(USART2, byte);
+}
+
+void send_string(char *string)
+{
+    send_string_usart(USART2, string);
+}
+
+uint8_t read_byte(void)
+{
+    return read_byte_usart(USART2);
+}
+
+uint32_t read_long(void)
+{
+    return read_byte() + (read_byte() << 8) + (read_byte() << 16) + (read_byte() << 24);
 }
