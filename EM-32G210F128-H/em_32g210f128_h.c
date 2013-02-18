@@ -9,10 +9,17 @@
 
 extern volatile uint32_t reset_control;
 
-int32_t usart1_rcv_char = -1;
-int32_t usart2_rcv_char = -1;
+volatile uint8_t usart0_rcv_char = -1;
+volatile uint8_t usart1_rcv_char = -1;
 
 int main(void);
+
+void USART0_RX_IRQHandler(void)
+{
+    if (USART0->STATUS & USART_STATUS_RXDATAV) {
+        usart0_rcv_char = USART_Rx(USART0);
+    }
+}
 
 void USART1_RX_IRQHandler(void)
 {
@@ -23,6 +30,22 @@ void USART1_RX_IRQHandler(void)
 
 void init_log(void)
 {
+    USART_InitAsync_TypeDef init  = USART_INITASYNC_DEFAULT;
+
+    GPIO_PinModeSet(gpioPortE, 10, gpioModePushPull, 0);
+    GPIO_PinModeSet(gpioPortE, 11, gpioModeInput, 0);
+
+    init.enable = usartDisable;
+    USART_InitAsync(USART0, &init);
+
+    USART0->ROUTE = USART_ROUTE_RXPEN | USART_ROUTE_TXPEN | USART_ROUTE_LOCATION_LOC0;
+    USART_IntClear(USART0, USART_IF_RXDATAV);
+    NVIC_ClearPendingIRQ(USART0_RX_IRQn);
+
+    USART_IntEnable(USART0, USART_IF_RXDATAV);
+    NVIC_EnableIRQ(USART0_RX_IRQn);
+
+    USART_Enable(USART0, usartEnable);
 }
 
 void init_button(void)
@@ -58,7 +81,7 @@ void init_uart(void)
 void log_string(char *str)
 {
     while (*str != '\0') {
-        USART_Tx(USART1, *str);
+        USART_Tx(USART0, *str);
         str++;
     }
 }
@@ -70,6 +93,14 @@ void log_nl(void)
 
 void log_hex(uint32_t n)
 {
+    uint8_t c;
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        c = (n >> 28);
+        USART_Tx(USART0, c + (c > 9 ? 'a' - 10 : '0'));
+        n <<= 4;
+    }
 }
 
 void set_led(uint32_t on)
@@ -83,20 +114,32 @@ void set_led(uint32_t on)
 
 void send_byte(uint8_t byte)
 {
+    USART_Tx(USART1, byte);
 }
 
-void send_string(char *string)
+void send_string(char *str)
 {
+    while (*str != '\0') {
+        USART_Tx(USART1, *str);
+        str++;
+    }
 }
 
 uint8_t read_byte(void)
 {
-    return 0;
+    uint8_t r;
+    volatile uint8_t *c;
+
+    c = &usart1_rcv_char;
+    while (*c == -1) __WFI();
+    r = *c;
+    *c = -1;
+    return r;
 }
 
 uint32_t read_long(void)
 {
-    return 0;
+    return read_byte() + (read_byte() << 8) + (read_byte() << 16) + (read_byte() << 24);
 }
 
 int _start(void)
