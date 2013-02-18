@@ -39,7 +39,7 @@ void init_uart(void)
 {
     USART_InitAsync_TypeDef init  = USART_INITASYNC_DEFAULT;
 
-    GPIO_PinModeSet(gpioPortC, 0, gpioModePushPull, 1);
+    GPIO_PinModeSet(gpioPortC, 0, gpioModePushPull, 0);
     GPIO_PinModeSet(gpioPortC, 1, gpioModeInput, 0);
 
     init.enable = usartDisable;
