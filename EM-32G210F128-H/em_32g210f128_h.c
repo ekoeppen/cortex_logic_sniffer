@@ -28,6 +28,8 @@ void USART1_RX_IRQHandler(void)
     }
 }
 
+#ifdef LOGGING
+
 void init_log(void)
 {
     USART_InitAsync_TypeDef init  = USART_INITASYNC_DEFAULT;
@@ -47,6 +49,51 @@ void init_log(void)
 
     USART_Enable(USART0, usartEnable);
 }
+
+void log_string(char *str)
+{
+    while (*str != '\0') {
+        USART_Tx(USART0, *str);
+        str++;
+    }
+}
+
+void log_nl(void)
+{
+    log_string("\r\n");
+}
+
+void log_hex(uint32_t n)
+{
+    uint8_t c;
+    int i;
+
+    for (i = 0; i < 8; i++) {
+        c = (n >> 28);
+        USART_Tx(USART0, c + (c > 9 ? 'a' - 10 : '0'));
+        n <<= 4;
+    }
+}
+
+#else
+
+void init_log(void)
+{
+}
+
+void log_string(char *str)
+{
+}
+
+void log_nl(void)
+{
+}
+
+void log_hex(uint32_t n)
+{
+}
+
+#endif
 
 void init_button(void)
 {
@@ -76,31 +123,6 @@ void init_uart(void)
     NVIC_EnableIRQ(USART1_RX_IRQn);
 
     USART_Enable(USART1, usartEnable);
-}
-
-void log_string(char *str)
-{
-    while (*str != '\0') {
-        USART_Tx(USART0, *str);
-        str++;
-    }
-}
-
-void log_nl(void)
-{
-    log_string("\r\n");
-}
-
-void log_hex(uint32_t n)
-{
-    uint8_t c;
-    int i;
-
-    for (i = 0; i < 8; i++) {
-        c = (n >> 28);
-        USART_Tx(USART0, c + (c > 9 ? 'a' - 10 : '0'));
-        n <<= 4;
-    }
 }
 
 void set_led(uint32_t on)

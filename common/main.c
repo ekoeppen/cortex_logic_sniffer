@@ -129,10 +129,8 @@ int main(void)
     init_button();
     init_log();
     init_uart();
-    set_led(1);
 
     log_string("Ready.\r\n");
-    while(1) ;
     sump_handler();
     return 0;
 }
