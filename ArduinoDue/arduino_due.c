@@ -1,4 +1,4 @@
-#include "sam3.h"
+#include "sam3x8e.h"
 
 extern volatile uint32_t reset_control;
 

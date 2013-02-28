@@ -1,9 +1,8 @@
 # Declare paths
 LIB_PATH = ../..
-SAM_PATH = $(LIB_PATH)/SAM3
-DRIVER =  $(SAM_PATH)/libsam
-CMSIS_CORE = $(SAM_PATH)/CMSIS/CMSIS
-CMSIS_DEVICE = $(SAM_PATH)/CMSIS/Device/ATMEL
+SAM_PATH = $(LIB_PATH)/asf-3.5.1
+DRIVER =  $(SAM_PATH)/sam
+CMSIS_CORE = $(SAM_PATH)/thirdparty/CMSIS
 
 # OpenOCD interface file used for programming/debugging the micronctroller
 OPENOCD_INTERFACE ?= interface/olimex-arm-usb-tiny-h.cfg
@@ -16,18 +15,19 @@ CP = arm-none-eabi-objcopy
 OD = arm-none-eabi-objdump
 
 # Declare command line flags
-CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(CMSIS_DEVICE) -I$(CMSIS_DEVICE)/sam3xa/include -I$(DRIVER)/include -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -D__SAM3X8E__
+CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(DRIVER)/utils/cmsis/sam3x/include -I$(DRIVER)/utils/cmsis/sam3x/source/templates -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -D__SAM3X8E__
 CFLAGS = $(CORE_CFLAGS) -c 
-CFLAGS_LINK = -Wl,-T$(CMSIS_DEVICE)/sam3xa/source/gcc_arm/sam3x8e_flash.ld -L$(CMSIS_DEVICE)/sam3xa/source/gcc_arm -nostartfiles -nodefaultlibs $(CORE_CFLAGS)
+CFLAGS_LINK = -Wl,-T$(DRIVER)/utils/linker_scripts/sam3x/sam3x8/gcc/flash.ld -nostartfiles -nodefaultlibs $(CORE_CFLAGS)
 ASFLAGS = -mcpu=cortex-m3 -mthumb -g
-LDFLAGS = -T$(CMSIS_DEVICE)/sam3xa/source/gcc_arm/sam3x8e_flash.ld -nostartfiles
+LDFLAGS = -T$(DRIVER)/utils/linker_scripts/sam3x/sam3x8/gcc/flash.ld -nostartfiles
 CPFLAGS = -Obinary
 ODFLAGS	= -S
 
 # List common and system library source files
 # (i.e. for accessing STM32/Cortex M3 hardware) 
-SRCS = $(CMSIS_DEVICE)/sam3xa/source/system_sam3xa.c
-SRCS += $(CMSIS_DEVICE)/sam3xa/source/gcc_arm/startup_sam3xa.c
+SRCS = $(DRIVER)/utils/cmsis/sam3x/source/templates/system_sam3x.c
+SRCS = $(DRIVER)/utils/cmsis/sam3x/source/templates/exceptions.c
+SRCS += $(DRIVER)/utils/cmsis/sam3x/source/templates/gcc/startup_sam3x.c
 SRCS += arduino_due.c
 SRCS += ../common/main.c ../common/sampler.s
 
