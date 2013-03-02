@@ -1,6 +1,8 @@
 #ifndef __COMMON_H
 #define __COMMON_H
 
+void init_board(void);
+
 void init_log(void);
 void init_button(void);
 void init_led(void);

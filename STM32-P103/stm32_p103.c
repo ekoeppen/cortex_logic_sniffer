@@ -32,6 +32,10 @@ void USART2_IRQHandler(void)
     }
 }
 
+void init_board(void)
+{
+}
+
 void init_led(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;

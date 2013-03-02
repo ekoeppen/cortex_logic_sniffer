@@ -14,6 +14,18 @@ volatile uint8_t usart1_rcv_char = -1;
 
 int main(void);
 
+void init_board(void)
+{
+    CHIP_Init();
+
+    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);
+    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
+    CMU_OscillatorEnable(cmuOsc_HFRCO, false, false);
+    CMU_ClockDivSet(cmuClock_HFPER, cmuClkDiv_8);
+
+    CMU_ClockEnable(cmuClock_GPIO, true);
+}
+
 void USART0_RX_IRQHandler(void)
 {
     if (USART0->STATUS & USART_STATUS_RXDATAV) {
@@ -34,6 +46,7 @@ void init_log(void)
 {
     USART_InitAsync_TypeDef init  = USART_INITASYNC_DEFAULT;
 
+    CMU_ClockEnable(cmuClock_USART0, true);
     GPIO_PinModeSet(gpioPortE, 10, gpioModePushPull, 0);
     GPIO_PinModeSet(gpioPortE, 11, gpioModeInput, 0);
 
@@ -109,6 +122,8 @@ void init_uart(void)
 {
     USART_InitAsync_TypeDef init  = USART_INITASYNC_DEFAULT;
 
+    CMU_ClockEnable(cmuClock_USART1, true);
+
     GPIO_PinModeSet(gpioPortC, 0, gpioModePushPull, 0);
     GPIO_PinModeSet(gpioPortC, 1, gpioModeInput, 0);
 
@@ -166,16 +181,5 @@ uint32_t read_long(void)
 
 int _start(void)
 {
-    CHIP_Init();
-
-    CMU_OscillatorEnable(cmuOsc_HFXO, true, true);
-    CMU_ClockSelectSet(cmuClock_HF, cmuSelect_HFXO);
-    CMU_OscillatorEnable(cmuOsc_HFRCO, false, false);
-    CMU_ClockDivSet(cmuClock_HFPER, cmuClkDiv_8);
-
-    CMU_ClockEnable(cmuClock_GPIO, true);
-    CMU_ClockEnable(cmuClock_USART0, true);
-    CMU_ClockEnable(cmuClock_USART1, true);
-
     return main();
 }
