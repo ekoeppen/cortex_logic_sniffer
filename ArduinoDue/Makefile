@@ -15,7 +15,7 @@ CP = arm-none-eabi-objcopy
 OD = arm-none-eabi-objdump
 
 # Declare command line flags
-CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(DRIVER)/utils/cmsis/sam3x/include -I$(DRIVER)/utils/cmsis/sam3x/source/templates -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -D__SAM3X8E__
+CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(SAM_PATH)/common/utils -I$(DRIVER)/drivers -I$(DRIVER)/utils -I$(DRIVER)/utils/preprocessor -I$(DRIVER)/utils/header_files -I$(DRIVER)/utils/cmsis/sam3x/include -I$(DRIVER)/utils/cmsis/sam3x/source/templates -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -D__SAM3X8E__
 CFLAGS = $(CORE_CFLAGS) -c 
 CFLAGS_LINK = -Wl,-T$(DRIVER)/utils/linker_scripts/sam3x/sam3x8/gcc/flash.ld -nostartfiles -nodefaultlibs $(CORE_CFLAGS)
 ASFLAGS = -mcpu=cortex-m3 -mthumb -g
@@ -26,8 +26,11 @@ ODFLAGS	= -S
 # List common and system library source files
 # (i.e. for accessing STM32/Cortex M3 hardware) 
 SRCS = $(DRIVER)/utils/cmsis/sam3x/source/templates/system_sam3x.c
-SRCS = $(DRIVER)/utils/cmsis/sam3x/source/templates/exceptions.c
+SRCS += $(DRIVER)/utils/cmsis/sam3x/source/templates/exceptions.c
 SRCS += $(DRIVER)/utils/cmsis/sam3x/source/templates/gcc/startup_sam3x.c
+SRCS += $(DRIVER)/drivers/pmc/pmc.c
+SRCS += $(DRIVER)/drivers/pio/pio.c
+SRCS += $(DRIVER)/drivers/uart/uart.c
 SRCS += arduino_due.c
 SRCS += ../common/main.c ../common/sampler.s
 
