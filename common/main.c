@@ -125,6 +125,7 @@ void sump_handler(void)
 
 int main(void)
 {
+    init_board();
     init_led();
     init_button();
     init_log();
