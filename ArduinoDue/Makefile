@@ -15,8 +15,8 @@ CP = arm-none-eabi-objcopy
 OD = arm-none-eabi-objdump
 
 # Declare command line flags
-CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(SAM_PATH)/common/utils -I$(DRIVER)/drivers -I$(DRIVER)/utils -I$(DRIVER)/utils/preprocessor -I$(DRIVER)/utils/header_files -I$(DRIVER)/utils/cmsis/sam3x/include -I$(DRIVER)/utils/cmsis/sam3x/source/templates -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb -D__SAM3X8E__
-CFLAGS = $(CORE_CFLAGS) -c 
+CORE_CFLAGS = -I. -I../common -I$(CMSIS_CORE)/Include -I$(SAM_PATH)/common/utils -I$(DRIVER)/drivers -I$(DRIVER)/utils -I$(DRIVER)/utils/preprocessor -I$(DRIVER)/utils/header_files -I$(DRIVER)/utils/cmsis/sam3x/include -I$(DRIVER)/utils/cmsis/sam3x/source/templates -fno-common -O0 -g -Wall -mcpu=cortex-m3 -mthumb  -std=c99 -D__SAM3X8E__
+CFLAGS = $(CORE_CFLAGS) -c
 CFLAGS_LINK = -Wl,-T$(DRIVER)/utils/linker_scripts/sam3x/sam3x8/gcc/flash.ld -nostartfiles -nodefaultlibs $(CORE_CFLAGS)
 ASFLAGS = -mcpu=cortex-m3 -mthumb -g
 LDFLAGS = -T$(DRIVER)/utils/linker_scripts/sam3x/sam3x8/gcc/flash.ld -nostartfiles
