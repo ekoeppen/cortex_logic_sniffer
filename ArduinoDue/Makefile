@@ -31,6 +31,7 @@ SRCS += $(DRIVER)/utils/cmsis/sam3x/source/templates/gcc/startup_sam3x.c
 SRCS += $(DRIVER)/drivers/pmc/pmc.c
 SRCS += $(DRIVER)/drivers/pio/pio.c
 SRCS += $(DRIVER)/drivers/uart/uart.c
+SRCS += $(DRIVER)/drivers/usart/usart.c
 SRCS += arduino_due.c
 SRCS += ../common/main.c ../common/sampler.s
 
