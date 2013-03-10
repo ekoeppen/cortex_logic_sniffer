@@ -6,25 +6,6 @@
 #include "usart/usart.h"
 #include "common.h"
 
-#define PINS_UART         (PIO_PA8A_URXD | PIO_PA9A_UTXD)
-#define PINS_UART_FLAGS   (PIO_PERIPH_A | PIO_DEFAULT)
-
-#define PINS_UART_MASK    (PIO_PA8A_URXD | PIO_PA9A_UTXD)
-#define PINS_UART_PIO     PIOA
-#define PINS_UART_ID      ID_PIOA
-#define PINS_UART_TYPE    PIO_PERIPH_A
-#define PINS_UART_ATTR    PIO_DEFAULT
-
-
-#define PINS_USART0       (PIO_PA10A_RXD0 | PIO_PA11A_TXD0)
-#define PINS_USART0_FLAGS (PIO_PERIPH_A | PIO_DEFAULT)
-
-#define PINS_USART0_MASK  (PIO_PA10A_RXD0 | PIO_PA11A_TXD0)
-#define PINS_USART0_PIO   PIOA
-#define PINS_USART0_ID    ID_PIOA
-#define PINS_USART0_TYPE  PIO_PERIPH_A
-#define PINS_USART0_ATTR  PIO_DEFAULT
-
 extern volatile uint32_t reset_control;
 
 int32_t usart1_rcv_char = -1;
@@ -55,10 +36,10 @@ void init_log(void)
         .channel_mode = US_MR_CHMODE_NORMAL
     };
 
-    pmc_enable_periph_clk(PINS_USART0_ID);
+    pmc_enable_periph_clk(ID_PIOA);
     pmc_enable_periph_clk(ID_USART0);
 
-    pio_configure(PINS_USART0_PIO, PINS_USART0_TYPE, PINS_USART0_MASK, PINS_USART0_ATTR) ;
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA10A_RXD0 | PIO_PA11A_TXD0, PIO_DEFAULT) ;
 
     usart_init_rs232(USART0, &usart_opt, SystemCoreClock);
     usart_reset_tx(USART0);
@@ -108,10 +89,10 @@ void init_uart(void)
         .ul_mode = UART_MR_CHMODE_NORMAL | UART_MR_PAR_NO,
     };
 
-    pmc_enable_periph_clk(PINS_UART_ID);
+    pmc_enable_periph_clk(ID_PIOA);
     pmc_enable_periph_clk(ID_UART);
 
-    pio_configure(PINS_UART_PIO, PINS_UART_TYPE, PINS_UART_MASK, PINS_UART_ATTR) ;
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA8A_URXD | PIO_PA9A_UTXD, PIO_DEFAULT) ;
 
     uart_opt.ul_mck = SystemCoreClock;
     uart_init(UART, &uart_opt);
@@ -135,6 +116,7 @@ void send_string(char *str)
 
 uint8_t read_byte(void)
 {
+    return 0;
 }
 
 uint32_t read_long(void)
