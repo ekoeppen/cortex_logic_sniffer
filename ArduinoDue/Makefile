@@ -1,6 +1,6 @@
 # Declare paths
 LIB_PATH = ../..
-SAM_PATH = $(LIB_PATH)/asf-3.5.1
+SAM_PATH = $(LIB_PATH)/asf-3.7.3
 DRIVER =  $(SAM_PATH)/sam
 CMSIS_CORE = $(SAM_PATH)/thirdparty/CMSIS
 
