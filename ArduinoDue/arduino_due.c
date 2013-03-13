@@ -19,18 +19,20 @@ void init_board(void)
 void init_led(void)
 {
     pmc_enable_periph_clk(ID_PIOB);
-    pio_configure(PIOB, PIO_OUTPUT_0, PIO_PB27, PIO_DEFAULT) ;
+    pio_configure(PIOB, PIO_OUTPUT_0, PIO_PB27, PIO_DEFAULT);
 }
 
 void init_button(void)
 {
+    // pmc_enable_periph_clk(ID_PIOC);
+    // pio_configure(PIOB, PIO_INPUT, PIO_PC0, PIO_PULLUP | PIO_DEBOUNCE | PIO_IT_FALL_EDGE);
 }
 
 void init_log(void)
 {
     sam_usart_opt_t usart_opt = {
         .baudrate = 115200,
-        .char_length = 8,
+        .char_length = US_MR_CHRL_8_BIT,
         .parity_type = US_MR_PAR_NO,
         .stop_bits = US_MR_NBSTOP_1_BIT,
         .channel_mode = US_MR_CHMODE_NORMAL
