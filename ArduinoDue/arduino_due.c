@@ -118,7 +118,11 @@ void send_string(char *str)
 
 uint8_t read_byte(void)
 {
-    return 0;
+    uint8_t c;
+
+    while (!uart_is_rx_ready(UART));
+    uart_read(UART, &c);
+    return c;
 }
 
 uint32_t read_long(void)

@@ -94,6 +94,7 @@ void sump_handler(void)
     uint8_t command;
 
     while (1) {
+        log_string("Waiting for command.\n");
         command = read_byte();
         log_string("Got command: ");
         log_hex(command);
