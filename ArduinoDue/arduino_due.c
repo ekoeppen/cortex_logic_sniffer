@@ -8,8 +8,19 @@
 
 extern volatile uint32_t reset_control;
 
-int32_t usart1_rcv_char = -1;
-int32_t usart2_rcv_char = -1;
+int32_t uart_rcv_char = -1;
+
+void UART_Handler(void)
+{
+    uint32_t status;
+
+    status = UART->UART_SR;
+    if (status & UART_SR_OVRE || status & UART_SR_FRAME) {
+        UART->UART_CR |= UART_CR_RSTSTA;
+    } else if (status & UART_SR_RXRDY) {
+        uart_rcv_char = UART->UART_RHR;
+    }
+}
 
 void init_board(void)
 {
@@ -24,8 +35,6 @@ void init_led(void)
 
 void init_button(void)
 {
-    // pmc_enable_periph_clk(ID_PIOC);
-    // pio_configure(PIOB, PIO_INPUT, PIO_PC0, PIO_PULLUP | PIO_DEBOUNCE | PIO_IT_FALL_EDGE);
 }
 
 void init_log(void)
@@ -41,7 +50,8 @@ void init_log(void)
     pmc_enable_periph_clk(ID_PIOA);
     pmc_enable_periph_clk(ID_USART0);
 
-    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA10A_RXD0 | PIO_PA11A_TXD0, PIO_DEFAULT) ;
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA10A_RXD0, PIO_PULLUP);
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA11A_TXD0, PIO_DEFAULT);
 
     usart_init_rs232(USART0, &usart_opt, SystemCoreClock);
     usart_reset_tx(USART0);
@@ -94,12 +104,14 @@ void init_uart(void)
     pmc_enable_periph_clk(ID_PIOA);
     pmc_enable_periph_clk(ID_UART);
 
-    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA8A_URXD | PIO_PA9A_UTXD, PIO_DEFAULT) ;
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA8A_URXD, PIO_PULLUP) ;
+    pio_configure(PIOA, PIO_PERIPH_A, PIO_PA9A_UTXD, PIO_DEFAULT) ;
 
     uart_opt.ul_mck = SystemCoreClock;
     uart_init(UART, &uart_opt);
-    uart_reset_tx(UART);
-    uart_enable_tx(UART);
+
+    uart_enable_interrupt(UART, UART_IER_RXRDY | UART_IER_OVRE | UART_IER_FRAME);
+    NVIC_EnableIRQ(UART_IRQn);
 }
 
 void send_byte(uint8_t c)
@@ -118,11 +130,14 @@ void send_string(char *str)
 
 uint8_t read_byte(void)
 {
-    uint8_t c;
+    uint8_t r;
+    int32_t *c;
 
-    while (!uart_is_rx_ready(UART));
-    uart_read(UART, &c);
-    return c;
+    c = &uart_rcv_char;
+    while (*c == -1) __WFI();
+    r = *c & 0xff;
+    *c = -1;
+    return r;
 }
 
 uint32_t read_long(void)
