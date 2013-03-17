@@ -3,6 +3,12 @@
         .thumb_func
         .global sampler
 sampler:
+        @ parameters:
+        @ r0: samples array
+        @ r1: size of samples array
+        @ r2: reset_control flag
+        @ r3: GPIO block to sample
+
         @ r0: working register
         @ r1: GPIOC IDR (input for sampling)
         @ r2: reset control (used to stop sampling)
@@ -20,7 +26,7 @@ sampler:
         mov r8, r1
         lsl r8, #2
         add r8, r0
-        ldr r1, =0x40011008
+        mov r1, r3
         ldr r3, =0xe000e010
 
         @ reset reset control flag

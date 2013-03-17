@@ -1,5 +1,6 @@
 #include "sam3x8e.h"
 #include "pmc/pmc.h"
+#include "wdt/wdt.h"
 #include "pio/pio.h"
 #include "pio/pio_sam3x8e.h"
 #include "uart/uart.h"
@@ -19,12 +20,20 @@ void UART_Handler(void)
         UART->UART_CR |= UART_CR_RSTSTA;
     } else if (status & UART_SR_RXRDY) {
         uart_rcv_char = UART->UART_RHR;
+        if (uart_rcv_char == 0 || uart_rcv_char == 3) {
+            reset_control |= RESET_CMD;
+        }
     }
 }
 
 void init_board(void)
 {
     SystemInit();
+    wdt_disable(WDT);
+    pmc_enable_periph_clk(ID_PIOC);
+    pio_configure(PIOC, PIO_INPUT,
+            PIO_PC1 | PIO_PC2 | PIO_PC3 | PIO_PC4 | PIO_PC5 | PIO_PC6 | PIO_PC7 | PIO_PC8,
+            PIO_PULLUP);
 }
 
 void init_led(void)

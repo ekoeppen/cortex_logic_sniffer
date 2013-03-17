@@ -67,10 +67,8 @@ void start_sampling(void)
     int i;
 
     log_string("Start sampling.\r\n");
-    set_led(1);
     for (i = 0; i < ARRAY_COUNT(samples); i++) samples[i] = 0;
-    samples_count = sampler(samples, ARRAY_COUNT(samples), &reset_control);
-    set_led(0);
+    samples_count = sampler(samples, ARRAY_COUNT(samples), &reset_control, SAMPLING_GPIO);
     log_string("Sampling done, count: ");
     log_hex(samples_count);
     log_string(" control: ");
@@ -94,7 +92,9 @@ void sump_handler(void)
     uint8_t command;
 
     while (1) {
+        set_led(0);
         command = read_byte();
+        set_led(1);
         log_string("Got command: ");
         log_hex(command);
         log_string("\r\n");

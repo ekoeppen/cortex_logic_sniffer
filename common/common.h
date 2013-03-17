@@ -19,7 +19,7 @@ void send_string(char *string);
 uint8_t read_byte(void);
 uint32_t read_long(void);
 
-uint32_t sampler(uint32_t *samples, uint32_t count, volatile uint32_t *reset_control);
+uint32_t sampler(uint32_t *samples, uint32_t count, volatile uint32_t *reset_control, uint32_t gpio);
 
 extern volatile uint32_t reset_control;
 
