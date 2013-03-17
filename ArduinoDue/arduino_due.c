@@ -7,9 +7,14 @@
 #include "usart/usart.h"
 #include "common.h"
 
+#define MAX_RCV 8
+
 extern volatile uint32_t reset_control;
 
-int32_t uart_rcv_char = -1;
+static volatile uint32_t uart_rcv_char = 0;
+static volatile uint32_t head;
+static volatile uint32_t tail;
+static uint8_t rcv_buffer[MAX_RCV];
 
 void UART_Handler(void)
 {
@@ -20,6 +25,8 @@ void UART_Handler(void)
         UART->UART_CR |= UART_CR_RSTSTA;
     } else if (status & UART_SR_RXRDY) {
         uart_rcv_char = UART->UART_RHR;
+        rcv_buffer[head] = uart_rcv_char;
+        head = (head + 1) & (MAX_RCV - 1);
         if (uart_rcv_char == 0 || uart_rcv_char == 3) {
             reset_control |= RESET_CMD;
         }
@@ -119,6 +126,9 @@ void init_uart(void)
     uart_opt.ul_mck = SystemCoreClock;
     uart_init(UART, &uart_opt);
 
+    head = 0;
+    tail = 0;
+
     uart_enable_interrupt(UART, UART_IER_RXRDY | UART_IER_OVRE | UART_IER_FRAME);
     NVIC_EnableIRQ(UART_IRQn);
 }
@@ -140,12 +150,13 @@ void send_string(char *str)
 uint8_t read_byte(void)
 {
     uint8_t r;
-    int32_t *c;
+    volatile uint32_t *c;
 
     c = &uart_rcv_char;
-    while (*c == -1) __WFI();
-    r = *c & 0xff;
-    *c = -1;
+    while (*c == 0) __WFI();
+    r = rcv_buffer[tail];
+    tail = (tail + 1) & (MAX_RCV - 1);
+    *c = 0;
     return r;
 }
 
